@@ -18,7 +18,8 @@ struct WireDescriptor {
 };
 
 struct SoundUserData {
-    unsigned short currentFrequency
+    unsigned double sample;
+    unsigned long maxSamples;
 };
 
 PaStream *stream = NULL;
