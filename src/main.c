@@ -6,6 +6,15 @@
 
 #define TRANSMIT_BUFFER 256
 
+#define MAX_SIN_BUFFER_CYCLES (32)
+#define MAX_EXPECTED_SIN_OFFSET (0.05)
+
+struct SinBuffer {
+    unsigned short freq;
+    unsigned short size;
+    paFloat32 *data;
+};
+
 struct ChannelDescriptor {
     unsigned short base;
     unsigned short binSize;
@@ -18,8 +27,9 @@ struct WireDescriptor {
 };
 
 struct SoundUserData {
-    unsigned double sample;
-    unsigned long maxSamples;
+    unsigned long duration;
+    unsigned short point;
+    struct SinBuffer *buffer;
 };
 
 PaStream *stream = NULL;
@@ -36,6 +46,32 @@ static int initialize() { /* HAS to check for PortAudio initialization first */
         return 0;
     }
     return -2;
+}
+
+static struct SinBuffer getSinBuffer(unsigned short freq) {
+    struct SinBuffer buffer;
+    buffer.freq = freq;
+    buffer.size = 0;
+    unsigned char cycles = 0;
+    double samplesPerFreq = SAMPLE_RATE / ((double) freq);
+    unsigned short fillSize = floor(samplesPerFreq + 0.5);
+    buffer.data = (paFloat32 *) malloc(sizeof(paFloat32) * fillSize);
+    double sample = 0;
+    while (cycles < MAX_SIN_BUFFER_CYCLES) {
+         if (buffer.size == fillSize) {
+             fillSize = fillSize * 2;
+             buffer.data = realloc((void *) buffer.data, sizeof(paFloat32) * fillSize);
+         }
+         buffer.data[buffer.size++] = sin(2 * M_PI * (sample++) / samplesPerFreq);
+         if (sample >= samplesPerFreq) {
+             sample = sample - samplesPerFreq;
+             cycles++;
+         }
+    }
+    if (buffer.size ~= fillSize) {
+        buffer.data = realloc((void *) buffer.data, sizeof(paFloat32) * buffer.size);
+    }
+    return buffer;
 }
 
 static int transmissionCallback(const void *inputBuffer, void *outputBuffer,
