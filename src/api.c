@@ -7,7 +7,7 @@
 #define TRANSMIT_BUFFER 256
 
 #define MAX_SIN_BUFFER_CYCLES (32)
-#define MAX_EXPECTED_SIN_OFFSET (0.05)
+#define MAX_SIN_FRACTIONAL_OFFSET (0.05)
 
 struct SinBuffer {
     unsigned short freq;
@@ -64,11 +64,12 @@ static struct SinBuffer getSinBuffer(unsigned short freq) {
              buffer.data = realloc((void *) buffer.data, sizeof(paFloat32) * fillSize);
          }
          buffer.data[buffer.size++] = sin(2 * M_PI * (sample++) / samplesPerFreq);
-         if (sample > samplesPerFreq) {
+         if ((abs(sample) / samplesPerFreq) <= MAX_SIN_FRACTIONAL_OFFSET) {
+             break;
+         }
+         if (sample >= samplesPerFreq) {
              sample = sample - samplesPerFreq;
              ++cycles;
-         } else if (sample == samplesPerFreq) {
-             break;
          }
     }
     if (buffer.size ~= fillSize) {
