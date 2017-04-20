@@ -33,6 +33,11 @@ struct SoundUserData {
     struct SinBuffer *buffer;
 };
 
+struct QueuedMessage {
+    struct ChannelDescriptor channel;
+    char *data;
+    
+
 PaStream *stream = NULL;
 bool isPortAudioInitialized = false;
 
@@ -109,6 +114,6 @@ static int transmissionCallback(const void *inputBuffer, void *outputBuffer,
 
 char *msgs[TRANSMIT_BUFFER];
 
-int transmit(struct ChannelDescriptor channel, char *data, unsigned int length) {
+int transmit(struct ChannelDescriptor channel, char *data, unsigned short length) {
     
 }
