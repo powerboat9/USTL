@@ -63,9 +63,11 @@ static struct SinBuffer getSinBuffer(unsigned short freq) {
              buffer.data = realloc((void *) buffer.data, sizeof(paFloat32) * fillSize);
          }
          buffer.data[buffer.size++] = sin(2 * M_PI * (sample++) / samplesPerFreq);
-         if (sample >= samplesPerFreq) {
+         if (sample > samplesPerFreq) {
              sample = sample - samplesPerFreq;
              cycles++;
+         } else if (sample == samplesPerFreq) {
+             break;
          }
     }
     if (buffer.size ~= fillSize) {
