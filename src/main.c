@@ -16,6 +16,7 @@ struct SinBuffer {
 };
 
 struct ChannelDescriptor {
+    SinBuffer *buffers;
     unsigned short base;
     unsigned short binSize;
     unsigned short binCount;
@@ -65,7 +66,7 @@ static struct SinBuffer getSinBuffer(unsigned short freq) {
          buffer.data[buffer.size++] = sin(2 * M_PI * (sample++) / samplesPerFreq);
          if (sample > samplesPerFreq) {
              sample = sample - samplesPerFreq;
-             cycles++;
+             ++cycles;
          } else if (sample == samplesPerFreq) {
              break;
          }
@@ -74,6 +75,28 @@ static struct SinBuffer getSinBuffer(unsigned short freq) {
         buffer.data = realloc((void *) buffer.data, sizeof(paFloat32) * buffer.size);
     }
     return buffer;
+}
+
+static void addBuffersToChannel(ChannelDescriptor *channel) {
+    if (channel->buffers == NULL) {
+        channel->buffers = (struct SinBuffer *) malloc(sizeof(struct SinBuffer) * channel->binCount);
+        unsigned short freq = channel->base;
+        for (unsigned short bin = 0; bin < (channel->binCount); ++bin) {
+            channel->buffers[bin] = getSinBuffer(freq);
+            freq += channel->binSize;
+        }
+    }
+}
+
+static void removeChannelBuffers(ChannelDescriptor *channel) {
+    if (channel->buffers != NULL) {
+        for (unsigned short bin = 0; bin < (channel->binCount); ++bin) {
+            free(channel->buffers[bin].data);
+            channel->buffers[bin].data = NULL;
+        }
+        free(channel->buffers);
+        channel->buffers = NULL;
+    }
 }
 
 static int transmissionCallback(const void *inputBuffer, void *outputBuffer,
